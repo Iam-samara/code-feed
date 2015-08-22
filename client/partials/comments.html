@@ -1,5 +1,6 @@
 <div class="post">
   <h4>{{commentCtrl.post_msg.title}}</h4>
+
   {{commentCtrl.post_msg.post}}
   <br>
   <a href={{commentCtrl.post_msg.url}} target="_blank">{{commentCtrl.post_msg.url}}</a>
@@ -18,6 +19,7 @@
     <div class="comments" ng-repeat="comment in commentCtrl.post_msg.comment">
       {{comment.body}}
     </div>
+
   </div>
 
 

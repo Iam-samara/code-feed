@@ -11,7 +11,7 @@ var express = require('express'),
   passport = require('passport'),
   LocalStrategy = require('passport-local').Strategy,
   GitHubStrategy = require('passport-github2').Strategy;
-
+  
 var GITHUB_CLIENT_ID = "fe21f1ad7bc9146e6015";
 var GITHUB_CLIENT_SECRET = "cab8552b2ca3cc736b7c0a0fe2b49a672a38400d";
 
@@ -32,6 +32,9 @@ app.get('/post', function(req, res) {
     res.sendFile(path.join(__dirname, '/../client/index.html'));
 });
 app.get('/oauth', function(req, res) {
+    res.sendFile(path.join(__dirname, '/../client/index.html'));
+});
+app.get('/comments/*', function(req, res) {
     res.sendFile(path.join(__dirname, '/../client/index.html'));
 });
 var UserSchema = new Schema({
@@ -64,8 +67,7 @@ var PostSchema = new Schema({
 	post: {type: String, required: true},
 	date: { type: Date, default: Date.now },
 	// postedBy: {type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
-  date: { type: Date, default: Date.now },
-	comment: [{body: "string", by: mongoose.Schema.Types.ObjectId, date:{ type: Date, default: Date.now } }]
+	comment: [{body: "string", by: "string"}]
 });
 
 // var CommentSchema = new Schema({
@@ -118,26 +120,13 @@ passport.use(new GitHubStrategy({
     clientSecret: GITHUB_CLIENT_SECRET,
     callbackURL: "https://ancient-tundra-6889.herokuapp.com/"
   },
-
-	function(accessToken, refreshToken, profile, done){
-		console.log('accessToken ' + accessToken);
-		console.log("refresh token " + refreshToken);
-		console.log("profile " + profile);
-		console.log('done ' + done);
-
-		// var newuser = new User({
-		//
-		// })
-
-
-	}
-  // function(accessToken, refreshToken, profile, done) {
-  //   User.findOrCreate({ githubId: profile.id }, function (err, user) {
-  //     return done(err, user);
-	// 		console.log(user);
-  //   });
-  // }
-
+  function(accessToken, refreshToken, profile, done) {
+    User.findOrCreate({
+      githubId: profile.id
+    }, function(err, user) {
+      return done(err, user);
+    });
+  }
 ));
 passport.serializeUser(function(user, done) {
   done(null, user);
@@ -161,35 +150,42 @@ app.get('/auth/github/callback',
   });
 
 
-app.post('/comments', function (req, res) {
-  Post.findOneAndUpdate({_id: req.body.postId}, function(err,post){
-  	if(err) throw err;
-  	post.comment.push({
-  		body: req.body.body,
-  		by: req.body.username,
-      date: req.body.date
-  	});
+app.post('/comment', function(req, res) {
+  Post.findOne({
+    _id: req.body.postId
+  }, function(err, post) {
+    if (err) throw err;
+    console.log(post);
+    post.comment.unshift({
+      body: req.body.comment,
+      by: ""
+    });
+    post.save();
+    console.log("comment saved");
+    res.status(200).end();
   });
 });
 
 
-app.get('/comments', function(req, res) {
-  Post.find({
+// middleware
+
+app.post('/comments', function(req, res) {
+  Post.findOne({
     _id: req.body.postId
   }, function(err, post) {
     if (err) throw err;
-    res.send(post.comment);
+    res.send(post);
   });
 });
 
 
 app.post('/post', function (req, res) {
+	console.log(req.body);
 		var newpost = new Post({
 				title: req.body.title,
 				url: req.body.url,
-				post: req.body.post,
+				post: req.body.post
 	//			postedBy: req.body.username
-        date: req.body.date
 		});
 		newpost.save(function(){
 			res.status(200).end();
@@ -203,7 +199,7 @@ app.get('/posts', function (req, res) {
   Post.find({}, function(err,posts){
   	if(err) throw err;
   	res.send(posts);
-  }).sort({date: 'descending'});
+  }).sort({date: -1});
 });
 
 // app.get('/fb_users', function (req, res) {

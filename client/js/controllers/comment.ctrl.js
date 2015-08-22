@@ -41,7 +41,8 @@ function CommentController($http, $location, $stateParams) {
 
 
   this.upvote = function() {
-      this.post_msg.upVotes++;
+
+      this.post_msg.likes++;
     $http.put('/likes', {
       postId: $stateParams.postId,
       likes: that.post_msg.likes

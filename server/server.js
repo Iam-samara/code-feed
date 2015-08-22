@@ -5,6 +5,7 @@ var express = require('express'),
   bodyParser = require('body-parser'),
   cookieParser = require('cookie-parser'),
   Schema = mongoose.Schema,
+  var findOrCreate = require('mongoose-findorcreate');
   http = require('http'),
   array = [],
   passport = require('passport'),
@@ -72,6 +73,8 @@ var PostSchema = new Schema({
 // 	date: {type: date, required: true},
 
 // });
+
+UserSchema.plugin(findOrCreate);
 
 var User = mongoose.model("User", UserSchema);
 var Post = mongoose.model("Post", PostSchema);
@@ -192,44 +195,13 @@ app.post('/post', function (req, res) {
 			res.status(200).end();
 			console.log("saved a new post");
 		});
-	// console.log("Body: "+req.body);
-	// if(!req.cookies.username){
-	// 	console.log("Cookies don't exist: "+req.cookies.username);
-	// 	//res.send('Please log in before posting');
-	// 	res.error();
-	// 	res.end();
-	// } else {
-	// 	console.log("Cookies exist: "+req.cookies.username);
-	// 	User.find({username: req.cookies.username})
-	// 		.then(function(user){
-	// 			if(!user){
-	// 				res.send('Please log in before posting');
-	// 			}
-	// 			else if(req.cookies.access_token !== user.usertoken){
-	// 				console.log("Invalid token");
-	// 				res.error();
-	// 				res.end();
-	// 			}
-	// 			req.body.username = req.cookies.username;
-	// 			console.log(req.body);
-	// 			Post
-	// 			  .create(req.body)
-	// 			  .then(function(post){
-	// 			  	res.send(post);
-	// 			  	//res.send('post added');
-	// 			  })
-	// 			  .catch(function (error) {
-	// 			    if (error) {
-	// 			      res.send(error);
-	// 			    }
-	// 			  });
+
 });
 
 
 app.get('/posts', function (req, res) {
   Post.find({}, function(err,posts){
   	if(err) throw err;
-  	console.log(posts);
   	res.send(posts);
   }).sort({date: 'descending'});
 });
